@@ -9,6 +9,13 @@ const ACHIEVEMENT_DEFS = [
         check: (stats) => stats.totalFocus >= 1
     },
     {
+        id: 'three-pomodoros',
+        name: 'Aquecendo',
+        desc: 'Complete 3 pomodoros de foco',
+        icon: '📋',
+        check: (stats) => stats.totalFocus >= 3
+    },
+    {
         id: 'five-pomodoros',
         name: 'Disciplina',
         desc: 'Complete 5 pomodoros de foco',
@@ -21,6 +28,13 @@ const ACHIEVEMENT_DEFS = [
         desc: 'Complete 10 pomodoros de foco',
         icon: '⚡',
         check: (stats) => stats.totalFocus >= 10
+    },
+    {
+        id: 'fifteen-pomodoros',
+        name: 'Determinado',
+        desc: 'Complete 15 pomodoros de foco',
+        icon: '💫',
+        check: (stats) => stats.totalFocus >= 15
     },
     {
         id: 'twentyfive-pomodoros',
@@ -37,6 +51,13 @@ const ACHIEVEMENT_DEFS = [
         check: (stats) => stats.totalFocus >= 50
     },
     {
+        id: 'seventyfive-pomodoros',
+        name: 'Foco Absoluto',
+        desc: 'Complete 75 pomodoros de foco',
+        icon: '🎖️',
+        check: (stats) => stats.totalFocus >= 75
+    },
+    {
         id: 'hundred-pomodoros',
         name: 'Mestre do Tempo',
         desc: 'Complete 100 pomodoros de foco',
@@ -49,6 +70,13 @@ const ACHIEVEMENT_DEFS = [
         desc: 'Adicione sua primeira matéria',
         icon: '📚',
         check: (stats) => stats.subjectCount >= 1
+    },
+    {
+        id: 'three-subjects',
+        name: 'Estudioso',
+        desc: 'Cadastre 3 matérias diferentes',
+        icon: '📗',
+        check: (stats) => stats.subjectCount >= 3
     },
     {
         id: 'first-goal',
@@ -65,11 +93,25 @@ const ACHIEVEMENT_DEFS = [
         check: (stats) => stats.goalsReached >= 5
     },
     {
+        id: 'ten-goals',
+        name: 'Metódico',
+        desc: 'Atinga a meta de 10 matérias diferentes',
+        icon: '🎯',
+        check: (stats) => stats.goalsReached >= 10
+    },
+    {
         id: 'theme-creator',
         name: 'Artista',
         desc: 'Crie seu primeiro tema personalizado',
         icon: '🎨',
         check: (stats) => stats.customThemes >= 1
+    },
+    {
+        id: 'five-themes',
+        name: 'Designer',
+        desc: 'Crie 5 temas personalizados',
+        icon: '🖌️',
+        check: (stats) => stats.customThemes >= 5
     },
     {
         id: 'streak-3',
@@ -86,6 +128,13 @@ const ACHIEVEMENT_DEFS = [
         check: (stats) => stats.streak >= 7
     },
     {
+        id: 'streak-14',
+        name: 'Persistente',
+        desc: 'Mantenha uma sequência de 14 dias de estudo',
+        icon: '🔗',
+        check: (stats) => stats.streak >= 14
+    },
+    {
         id: 'streak-30',
         name: 'Mestre da Rotina',
         desc: 'Mantenha uma sequência de 30 dias de estudo',
@@ -100,6 +149,13 @@ const ACHIEVEMENT_DEFS = [
         check: (stats) => stats.totalMinutes >= 60
     },
     {
+        id: 'three-hours',
+        name: 'Imersão',
+        desc: 'Acumule 3 horas de foco',
+        icon: '📖',
+        check: (stats) => stats.totalMinutes >= 180
+    },
+    {
         id: 'five-hours',
         name: 'Dedicação',
         desc: 'Acumule 5 horas de foco',
@@ -112,6 +168,27 @@ const ACHIEVEMENT_DEFS = [
         desc: 'Acumule 10 horas de foco',
         icon: '🏃',
         check: (stats) => stats.totalMinutes >= 600
+    },
+    {
+        id: 'twenty-hours',
+        name: 'Viciado em Estudo',
+        desc: 'Acumule 20 horas de foco',
+        icon: '⏳',
+        check: (stats) => stats.totalMinutes >= 1200
+    },
+    {
+        id: 'perfect-day',
+        name: 'Dia Perfeito',
+        desc: 'Complete 8 pomodoros em um único dia',
+        icon: '☀️',
+        check: (stats) => stats.perfectDays >= 1
+    },
+    {
+        id: 'first-longbreak',
+        name: 'Recarregado',
+        desc: 'Complete sua primeira pausa longa',
+        icon: '🧘',
+        check: (stats) => stats.longBreaks >= 1
     }
 ];
 

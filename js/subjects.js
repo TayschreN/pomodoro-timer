@@ -123,12 +123,29 @@ class SubjectManager {
     getReport() {
         const totalSessions = this.history.length;
         const focusSessions = this.history.filter(h => h.type === 'focus');
+        const breakSessions = this.history.filter(h => h.type === 'shortBreak' || h.type === 'longBreak');
+        const longBreaks = this.history.filter(h => h.type === 'longBreak').length;
         const totalFocus = focusSessions.length;
         const totalMinutes = focusSessions.reduce((sum, h) => sum + h.duration, 0);
 
         const today = new Date().toDateString();
-        const todaySessions = focusSessions.filter(
+        const todayFocus = focusSessions.filter(
             h => new Date(h.completedAt).toDateString() === today
+        );
+
+        const todayMinutes = todayFocus.reduce((sum, h) => sum + h.duration, 0);
+
+        const now = new Date();
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+        const weekFocus = focusSessions.filter(
+            h => new Date(h.completedAt) >= weekStart
+        );
+
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthFocus = focusSessions.filter(
+            h => new Date(h.completedAt) >= monthStart
         );
 
         const bySubject = {};
@@ -148,13 +165,36 @@ class SubjectManager {
 
         const streak = this.calculateStreak();
 
+        const focusByDay = {};
+        focusSessions.forEach(h => {
+            const day = new Date(h.completedAt).toDateString();
+            focusByDay[day] = (focusByDay[day] || 0) + 1;
+        });
+        const perfectDays = Object.values(focusByDay).filter(c => c >= 8).length;
+
+        const avgPerDay = focusByDay.length > 0
+            ? (totalFocus / focusByDay.length).toFixed(1)
+            : '0';
+
+        const bestDay = focusByDay.length > 0
+            ? Math.max(...Object.values(focusByDay))
+            : 0;
+
         return {
             totalSessions,
             totalFocus,
             totalMinutes,
-            todaySessions: todaySessions.length,
+            todaySessions: todayFocus.length,
+            todayMinutes,
+            weekSessions: weekFocus.length,
+            monthSessions: monthFocus.length,
+            totalBreaks: breakSessions.length,
+            longBreaks,
             bySubject: Object.values(bySubject).sort((a, b) => b.totalPomodoros - a.totalPomodoros),
-            streak
+            streak,
+            perfectDays,
+            avgPerDay: parseFloat(avgPerDay),
+            bestDay
         };
     }
 

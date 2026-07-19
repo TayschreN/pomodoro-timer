@@ -136,7 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
             subjectCount: subjectManager.getAll().length,
             goalsReached: subjectManager.getAll().filter(s => s.completed >= s.target).length,
             customThemes: customThemes,
-            streak: report.streak
+            streak: report.streak,
+            perfectDays: report.perfectDays,
+            longBreaks: report.longBreaks
         };
         const newAchievements = achievementManager.check(stats);
         newAchievements.forEach(a => {
@@ -200,22 +202,64 @@ document.addEventListener('DOMContentLoaded', () => {
         const report = subjectManager.getReport();
         let html = '';
 
+        const focusHours = Math.floor(report.totalMinutes / 60);
+        const focusMins = report.totalMinutes % 60;
+        const totalTimeStr = focusHours > 0 ? `${focusHours}h${focusMins}min` : `${focusMins}min`;
+
         html += `<div class="report-summary">
             <div class="report-stat">
                 <span class="report-stat-value">${report.totalFocus}</span>
-                <span class="report-stat-label">Pomodoros completos</span>
+                <span class="report-stat-label">Pomodoros totais</span>
             </div>
             <div class="report-stat">
-                <span class="report-stat-value">${report.totalMinutes}</span>
-                <span class="report-stat-label">Minutos focados</span>
+                <span class="report-stat-value">${totalTimeStr}</span>
+                <span class="report-stat-label">Tempo focado</span>
             </div>
             <div class="report-stat">
                 <span class="report-stat-value">${report.todaySessions}</span>
-                <span class="report-stat-label">Hoje</span>
+                <span class="report-stat-label">Pomodoros hoje</span>
             </div>
             <div class="report-stat">
                 <span class="report-stat-value">${report.streak}</span>
                 <span class="report-stat-label">Dias seguidos</span>
+            </div>
+        </div>`;
+
+        html += `<div class="report-summary" style="margin-top:12px">
+            <div class="report-stat">
+                <span class="report-stat-value">${report.weekSessions}</span>
+                <span class="report-stat-label">Esta semana</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.monthSessions}</span>
+                <span class="report-stat-label">Este mês</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.avgPerDay}</span>
+                <span class="report-stat-label">Média por dia</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.bestDay}</span>
+                <span class="report-stat-label">Melhor dia</span>
+            </div>
+        </div>`;
+
+        html += `<div class="report-summary" style="margin-top:12px">
+            <div class="report-stat">
+                <span class="report-stat-value">${report.totalBreaks}</span>
+                <span class="report-stat-label">Pausas feitas</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.longBreaks}</span>
+                <span class="report-stat-label">Pausas longas</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.perfectDays}</span>
+                <span class="report-stat-label">Dias perfeitos</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.totalSessions}</span>
+                <span class="report-stat-label">Sessões totais</span>
             </div>
         </div>`;
 
@@ -314,6 +358,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 1000);
                 }
             } else {
+                updateAchievements();
+            }
+        } else {
+            const settings = settingsManager.getAll();
+            const type = session === 'longBreak' ? 'longBreak' : 'shortBreak';
+            const duration = session === 'longBreak' ? settings.longBreak : settings.shortBreak;
+            subjectManager.logSession(null, 'Pausa', type, duration);
+            if (session === 'longBreak') {
                 updateAchievements();
             }
         }
