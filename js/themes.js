@@ -38,6 +38,16 @@ const DEFAULT_THEMES = [
         timerColor: '#5b21b6',
         cardBg: '#ffffff',
         isDefault: true
+    },
+    {
+        id: 'meraki',
+        name: 'Meraki',
+        bg: '#0d0d0d',
+        primary: '#FFD700',
+        accent: '#FFB300',
+        timerColor: '#FFD700',
+        cardBg: '#1f1f1f',
+        isDefault: true
     }
 ];
 
