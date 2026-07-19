@@ -55,9 +55,9 @@ class ThemeManager {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
             try {
-                return JSON.parse(stored);
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) return parsed;
             } catch {
-                return [];
             }
         }
         return [];
@@ -71,10 +71,13 @@ class ThemeManager {
         const defaultIds = DEFAULT_THEMES.map(t => t.id);
         let changed = false;
 
-        defaultIds.forEach(dt => {
-            if (!this.themes.find(t => t.id === dt)) {
-                this.themes.push({ ...dt });
-                changed = true;
+        defaultIds.forEach(id => {
+            if (!this.themes.find(t => t.id === id)) {
+                const dt = DEFAULT_THEMES.find(t => t.id === id);
+                if (dt) {
+                    this.themes.push({ ...dt });
+                    changed = true;
+                }
             }
         });
 
@@ -118,9 +121,7 @@ class ThemeManager {
         root.style.setProperty('--timer-color', theme.timerColor);
         root.style.setProperty('--card-bg', theme.cardBg);
 
-        const borderColor = theme.isDefault
-            ? this.lighten(theme.bg, -15)
-            : this.blend(theme.cardBg, theme.primary, 0.12);
+        const borderColor = this.blend(theme.cardBg, theme.primary, 0.12);
 
         root.style.setProperty('--border', borderColor);
         root.style.setProperty('--shadow', theme.primary + '1A');
@@ -180,6 +181,23 @@ class ThemeManager {
         return newTheme;
     }
 
+    updateTheme(id, themeData) {
+        const idx = this.themes.findIndex(t => t.id === id);
+        if (idx === -1) return false;
+        if (this.themes[idx].isDefault) return false;
+
+        if (themeData.name !== undefined) this.themes[idx].name = themeData.name;
+        if (themeData.bg !== undefined) this.themes[idx].bg = themeData.bg;
+        if (themeData.primary !== undefined) this.themes[idx].primary = themeData.primary;
+        if (themeData.accent !== undefined) this.themes[idx].accent = themeData.accent;
+        if (themeData.timerColor !== undefined) this.themes[idx].timerColor = themeData.timerColor;
+        if (themeData.cardBg !== undefined) this.themes[idx].cardBg = themeData.cardBg;
+
+        this.saveThemes();
+        this.renderGrid();
+        return true;
+    }
+
     deleteTheme(id) {
         const idx = this.themes.findIndex(t => t.id === id);
         if (idx === -1) return false;
@@ -206,6 +224,8 @@ class ThemeManager {
             card.className = 'theme-card' + (theme.id === this.activeThemeId ? ' active' : '');
             card.dataset.themeId = theme.id;
 
+            const hasActions = !theme.isDefault;
+
             card.innerHTML = `
                 <div class="theme-card-preview">
                     <span style="background:${theme.bg}"></span>
@@ -215,13 +235,24 @@ class ThemeManager {
                     <span style="background:${theme.cardBg}"></span>
                 </div>
                 <span class="theme-card-name">${theme.name}</span>
-                ${!theme.isDefault ? '<button class="delete-btn" title="Excluir tema">✕</button>' : ''}
+                ${hasActions ? `
+                    <div class="theme-card-actions">
+                        <button class="theme-edit-btn" title="Editar tema">✎</button>
+                        <button class="delete-btn" title="Excluir tema">✕</button>
+                    </div>
+                ` : ''}
             `;
 
             card.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-btn')) {
+                const target = e.target;
+                if (target.classList.contains('delete-btn')) {
                     e.stopPropagation();
                     this.deleteTheme(theme.id);
+                    return;
+                }
+                if (target.classList.contains('theme-edit-btn')) {
+                    e.stopPropagation();
+                    this.onEditTheme && this.onEditTheme(theme.id);
                     return;
                 }
                 this.setActive(theme.id);

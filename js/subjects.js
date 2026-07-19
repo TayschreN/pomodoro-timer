@@ -1,9 +1,11 @@
 const SUBJECTS_KEY = 'pomodoroSubjects';
 const ACTIVE_SUBJECT_KEY = 'pomodoroActiveSubject';
+const HISTORY_KEY = 'pomodoroHistory';
 
 class SubjectManager {
     constructor() {
         this.subjects = this.load();
+        this.history = this.loadHistory();
         this.activeSubjectId = localStorage.getItem(ACTIVE_SUBJECT_KEY);
         this.onChange = null;
     }
@@ -12,9 +14,9 @@ class SubjectManager {
         const stored = localStorage.getItem(SUBJECTS_KEY);
         if (stored) {
             try {
-                return JSON.parse(stored);
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) return parsed;
             } catch {
-                return [];
             }
         }
         return [];
@@ -22,6 +24,22 @@ class SubjectManager {
 
     save() {
         localStorage.setItem(SUBJECTS_KEY, JSON.stringify(this.subjects));
+    }
+
+    loadHistory() {
+        const stored = localStorage.getItem(HISTORY_KEY);
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) return parsed;
+            } catch {
+            }
+        }
+        return [];
+    }
+
+    saveHistory() {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(this.history));
     }
 
     getAll() {
@@ -88,5 +106,92 @@ class SubjectManager {
         const subj = this.subjects.find(s => s.id === id);
         if (!subj) return 0;
         return Math.max(0, subj.target - subj.completed);
+    }
+
+    logSession(subjectId, subjectName, type, durationMinutes) {
+        this.history.push({
+            id: 'log-' + Date.now(),
+            subjectId: subjectId || 'none',
+            subjectName: subjectName || 'Sem Matéria',
+            type: type,
+            duration: durationMinutes,
+            completedAt: new Date().toISOString()
+        });
+        this.saveHistory();
+    }
+
+    getReport() {
+        const totalSessions = this.history.length;
+        const focusSessions = this.history.filter(h => h.type === 'focus');
+        const totalFocus = focusSessions.length;
+        const totalMinutes = focusSessions.reduce((sum, h) => sum + h.duration, 0);
+
+        const today = new Date().toDateString();
+        const todaySessions = focusSessions.filter(
+            h => new Date(h.completedAt).toDateString() === today
+        );
+
+        const bySubject = {};
+        focusSessions.forEach(h => {
+            const key = h.subjectId || 'none';
+            if (!bySubject[key]) {
+                bySubject[key] = {
+                    subjectId: key,
+                    subjectName: h.subjectName || 'Sem Matéria',
+                    totalPomodoros: 0,
+                    totalMinutes: 0
+                };
+            }
+            bySubject[key].totalPomodoros++;
+            bySubject[key].totalMinutes += h.duration;
+        });
+
+        const streak = this.calculateStreak();
+
+        return {
+            totalSessions,
+            totalFocus,
+            totalMinutes,
+            todaySessions: todaySessions.length,
+            bySubject: Object.values(bySubject).sort((a, b) => b.totalPomodoros - a.totalPomodoros),
+            streak
+        };
+    }
+
+    calculateStreak() {
+        const focusSessions = this.history
+            .filter(h => h.type === 'focus')
+            .map(h => new Date(h.completedAt).toDateString())
+            .sort((a, b) => new Date(b) - new Date(a));
+
+        if (focusSessions.length === 0) return 0;
+
+        const uniqueDays = [...new Set(focusSessions)].sort((a, b) => new Date(b) - new Date(a));
+
+        let streak = 1;
+        const today = new Date().toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+        if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) {
+            return 0;
+        }
+
+        for (let i = 1; i < uniqueDays.length; i++) {
+            const prev = new Date(uniqueDays[i - 1]);
+            const curr = new Date(uniqueDays[i]);
+            const diffDays = (prev - curr) / 86400000;
+            if (diffDays <= 1.5) {
+                streak++;
+            } else {
+                break;
+            }
+        }
+
+        return streak;
+    }
+
+    clearHistory() {
+        this.history = [];
+        this.saveHistory();
     }
 }

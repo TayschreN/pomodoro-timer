@@ -10,6 +10,7 @@ class Timer {
         this.onTick = null;
         this.onComplete = null;
         this.onStateChange = null;
+        this.onSkip = null;
     }
 
     setSession(session) {
@@ -74,6 +75,15 @@ class Timer {
         if (this.onStateChange) this.onStateChange('stopped');
     }
 
+    skip() {
+        if (!this.isRunning) return;
+        this.stop();
+        this.remainingSeconds = 0;
+        if (this.onTick) this.onTick(0, this.totalSeconds, this.currentSession);
+        if (this.onSkip) this.onSkip(this.currentSession);
+        if (this.onStateChange) this.onStateChange('skipped');
+    }
+
     complete() {
         this.stop();
         if (this.onTick) this.onTick(0, this.totalSeconds, this.currentSession);
@@ -113,6 +123,7 @@ class Timer {
         this.stop();
         this.onTick = null;
         this.onComplete = null;
+        this.onSkip = null;
         this.onStateChange = null;
     }
 }

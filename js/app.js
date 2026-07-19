@@ -2,11 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeManager = new ThemeManager();
     const settingsManager = new SettingsManager();
     const subjectManager = new SubjectManager();
+    const achievementManager = new AchievementManager();
     const timer = new Timer(settingsManager.getAll());
 
     const timerDisplay = document.getElementById('timerDisplay');
     const sessionLabel = document.getElementById('sessionLabel');
     const startBtn = document.getElementById('startBtn');
+    const skipBtn = document.getElementById('skipBtn');
     const resetBtn = document.getElementById('resetBtn');
     const settingsBtn = document.getElementById('settingsBtn');
     const saveSettingsBtn = document.getElementById('saveSettings');
@@ -33,12 +35,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const subjectStats = document.getElementById('subjectStats');
     const subjectProgressFill = document.getElementById('subjectProgressFill');
     const subjectFaltam = document.getElementById('subjectFaltam');
+    const reportBtn = document.getElementById('reportBtn');
+    const reportModal = document.getElementById('reportModal');
+    const reportBody = document.getElementById('reportBody');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const achievementsBtn = document.getElementById('achievementsBtn');
+    const achievementsModal = document.getElementById('achievementsModal');
+    const achievementsBody = document.getElementById('achievementsBody');
+    const sessionPomodorosDiv = document.getElementById('sessionPomodoros');
 
     const progressFill = document.querySelector('.progress-ring-fill');
     const CIRCUMFERENCE = 816.81;
 
     let notificationTimeout = null;
     let editingThemeId = null;
+    let sessionPomodorosCount = 0;
 
     function updateDisplay(remaining, total, session) {
         timerDisplay.textContent = timer.formatTime(remaining);
@@ -81,6 +92,17 @@ document.addEventListener('DOMContentLoaded', () => {
             : 'Pomodoro Timer';
     }
 
+    function updateSessionPomodoros() {
+        const dots = sessionPomodorosDiv.querySelectorAll('.pomodoro-dot');
+        dots.forEach((dot, i) => {
+            if (i < sessionPomodorosCount) {
+                dot.classList.add('completed');
+            } else {
+                dot.classList.remove('completed');
+            }
+        });
+    }
+
     function updateSubjectDisplay() {
         const subj = subjectManager.getActive();
         if (!subj) {
@@ -103,6 +125,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const icons = ['📖', '🧮', '🔬', '✏️', '🗺️', '🎵', '💻', '📝', '🧠', '📚'];
         const iconIdx = subj.name.length % icons.length;
         subjectIcon.textContent = icons[iconIdx];
+    }
+
+    function updateAchievements() {
+        const report = subjectManager.getReport();
+        const customThemes = themeManager.getAll().filter(t => !t.isDefault).length;
+        const stats = {
+            totalFocus: report.totalFocus,
+            totalMinutes: report.totalMinutes,
+            subjectCount: subjectManager.getAll().length,
+            goalsReached: subjectManager.getAll().filter(s => s.completed >= s.target).length,
+            customThemes: customThemes,
+            streak: report.streak
+        };
+        const newAchievements = achievementManager.check(stats);
+        newAchievements.forEach(a => {
+            setTimeout(() => {
+                showNotification(`🏆 Conquista desbloqueada: ${a.name}!`, true);
+            }, 2000);
+        });
     }
 
     function renderSubjectList() {
@@ -155,6 +196,83 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function renderReport() {
+        const report = subjectManager.getReport();
+        let html = '';
+
+        html += `<div class="report-summary">
+            <div class="report-stat">
+                <span class="report-stat-value">${report.totalFocus}</span>
+                <span class="report-stat-label">Pomodoros completos</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.totalMinutes}</span>
+                <span class="report-stat-label">Minutos focados</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.todaySessions}</span>
+                <span class="report-stat-label">Hoje</span>
+            </div>
+            <div class="report-stat">
+                <span class="report-stat-value">${report.streak}</span>
+                <span class="report-stat-label">Dias seguidos</span>
+            </div>
+        </div>`;
+
+        if (report.bySubject.length > 0) {
+            html += `<h3 style="margin:20px 0 12px;font-size:15px;color:var(--text)">Matérias estudadas</h3>`;
+            html += `<div class="report-subjects">`;
+            report.bySubject.forEach(s => {
+                const hours = Math.floor(s.totalMinutes / 60);
+                const mins = s.totalMinutes % 60;
+                const timeStr = hours > 0 ? `${hours}h${mins}min` : `${mins}min`;
+                html += `<div class="report-subject-item">
+                    <div class="report-subject-name">${s.subjectName}</div>
+                    <div class="report-subject-stats">
+                        ${s.totalPomodoros} pomodoros · ${timeStr}
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+        }
+
+        if (report.totalSessions === 0) {
+            html += `<div style="text-align:center;padding:32px 0;color:var(--text-secondary);font-size:14px">
+                Nenhum pomodoro registrado ainda. Complete alguns para ver seu relatório!
+            </div>`;
+        }
+
+        reportBody.innerHTML = html;
+    }
+
+    function renderAchievements() {
+        const all = achievementManager.getAll();
+        const unlocked = achievementManager.getUnlockedCount();
+        const total = achievementManager.getTotalCount();
+
+        let html = `<div class="achievement-progress">
+            <span class="achievement-progress-text">${unlocked} de ${total} conquistas</span>
+            <div class="achievement-progress-bar">
+                <div class="achievement-progress-fill" style="width:${(unlocked/total)*100}%"></div>
+            </div>
+        </div>`;
+
+        html += `<div class="achievement-grid">`;
+        all.forEach(a => {
+            html += `<div class="achievement-card ${a.unlocked ? 'unlocked' : 'locked'}">
+                <div class="achievement-icon">${a.icon}</div>
+                <div class="achievement-info">
+                    <span class="achievement-name">${a.name}</span>
+                    <span class="achievement-desc">${a.desc}</span>
+                </div>
+                ${a.unlocked ? '<span class="achievement-check">✓</span>' : '<span class="achievement-lock">🔒</span>'}
+            </div>`;
+        });
+        html += `</div>`;
+
+        achievementsBody.innerHTML = html;
+    }
+
     // Timer callbacks
     timer.onTick = (remaining, total, session) => {
         updateDisplay(remaining, total, session);
@@ -173,16 +291,39 @@ document.addEventListener('DOMContentLoaded', () => {
         startBtn.classList.remove('running');
 
         if (session === 'focus') {
+            sessionPomodorosCount++;
+            updateSessionPomodoros();
+
+            const subj = subjectManager.getActive();
+            const subjName = subj ? subj.name : 'Sem Matéria';
+            const duration = settingsManager.getAll().focus;
+            subjectManager.logSession(
+                subj ? subj.id : null,
+                subjName,
+                'focus',
+                duration
+            );
+
             const result = subjectManager.incrementActive();
             if (result) {
                 updateSubjectDisplay();
+                updateAchievements();
                 if (result.reached) {
                     setTimeout(() => {
                         showNotification(`🎉 Parabéns! Você completou a meta de ${result.name}!`, true);
                     }, 1000);
                 }
+            } else {
+                updateAchievements();
             }
         }
+    };
+
+    timer.onSkip = (session) => {
+        playNotification();
+        showNotification('⏭ Pomodoro pulado', false);
+        startBtn.textContent = 'Iniciar';
+        startBtn.classList.remove('running');
     };
 
     timer.onStateChange = (state) => {
@@ -204,6 +345,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start / Pause
     startBtn.addEventListener('click', () => {
         timer.toggle();
+    });
+
+    // Skip
+    skipBtn.addEventListener('click', () => {
+        timer.skip();
     });
 
     // Reset
@@ -236,6 +382,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Theme editor
+    themeManager.onEditTheme = (themeId) => {
+        editingThemeId = themeId;
+        const theme = themeManager.getAll().find(t => t.id === themeId);
+        if (!theme) return;
+        document.getElementById('themeEditorTitle').textContent = 'Editar Tema';
+        document.getElementById('themeName').value = theme.name;
+        document.getElementById('themeBg').value = theme.bg;
+        document.getElementById('themePrimary').value = theme.primary;
+        document.getElementById('themeAccent').value = theme.accent;
+        document.getElementById('themeTimerColor').value = theme.timerColor;
+        document.getElementById('themeCardBg').value = theme.cardBg;
+        document.getElementById('themeEditor').classList.remove('hidden');
+    };
+
     newThemeBtn.addEventListener('click', () => {
         editingThemeId = null;
         document.getElementById('themeEditorTitle').textContent = 'Novo Tema';
@@ -250,16 +410,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveThemeBtn.addEventListener('click', () => {
         const name = document.getElementById('themeName').value.trim() || 'Sem Nome';
-        const theme = themeManager.addTheme({
+        const data = {
             name,
             bg: document.getElementById('themeBg').value,
             primary: document.getElementById('themePrimary').value,
             accent: document.getElementById('themeAccent').value,
             timerColor: document.getElementById('themeTimerColor').value,
             cardBg: document.getElementById('themeCardBg').value
-        });
-        document.getElementById('themeEditor').classList.add('hidden');
-        themeManager.setActive(theme.id);
+        };
+
+        if (editingThemeId) {
+            themeManager.updateTheme(editingThemeId, data);
+            document.getElementById('themeEditor').classList.add('hidden');
+            if (themeManager.activeThemeId === editingThemeId) {
+                themeManager.apply(editingThemeId);
+            } else {
+                themeManager.renderGrid();
+            }
+        } else {
+            const theme = themeManager.addTheme(data);
+            document.getElementById('themeEditor').classList.add('hidden');
+            themeManager.setActive(theme.id);
+        }
     });
 
     // Subjects
@@ -293,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addSubjectOpenBtn.style.display = 'block';
         renderSubjectList();
         updateSubjectDisplay();
+        updateAchievements();
     }
 
     addSubjectBtn.addEventListener('click', addSubject);
@@ -310,6 +483,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Report
+    reportBtn.addEventListener('click', () => {
+        renderReport();
+        reportModal.classList.remove('hidden');
+    });
+
+    clearHistoryBtn.addEventListener('click', () => {
+        if (confirm('Tem certeza que deseja limpar todo o histórico de estudos?')) {
+            subjectManager.clearHistory();
+            renderReport();
+            updateAchievements();
+            showNotification('Histórico limpo!', false);
+        }
+    });
+
+    // Achievements
+    achievementsBtn.addEventListener('click', () => {
+        renderAchievements();
+        achievementsModal.classList.remove('hidden');
+    });
+
     // Apply initial theme
     themeManager.apply(themeManager.activeThemeId);
 
@@ -317,6 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDisplay(timer.remainingSeconds, timer.totalSeconds, timer.currentSession);
     updateDocumentTitle(timer.remainingSeconds);
     updateSubjectDisplay();
+    updateSessionPomodoros();
 
     // FAB (mobile theme toggle)
     fabThemeBtn.addEventListener('click', () => {
@@ -347,13 +542,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     addSubjectOpenBtn.style.display = 'block';
                 }
             }
-        });
-    });
-
-    document.querySelectorAll('[data-modal]').forEach(btn => {
-        if (btn.classList.contains('modal-close')) return;
-        btn.addEventListener('click', () => {
-            document.getElementById(btn.dataset.modal).classList.add('hidden');
         });
     });
 
