@@ -2,19 +2,19 @@ const DEFAULT_THEMES = [
     {
         id: 'lavanda',
         name: 'Lavanda',
-        bg: '#ffffff',
-        primary: '#7c3aed',
-        accent: '#a78bfa',
-        timerColor: '#4c1d95',
-        cardBg: '#f5f3ff',
+        bg: '#faf5ff',
+        primary: '#8b5cf6',
+        accent: '#c4b5fd',
+        timerColor: '#6d28d9',
+        cardBg: '#ffffff',
         isDefault: true
     },
     {
         id: 'violeta-escuro',
         name: 'Violeta Escuro',
         bg: '#1e1b4b',
-        primary: '#8b5cf6',
-        accent: '#c4b5fd',
+        primary: '#a78bfa',
+        accent: '#8b5cf6',
         timerColor: '#ddd6fe',
         cardBg: '#2e1065',
         isDefault: true
@@ -22,21 +22,21 @@ const DEFAULT_THEMES = [
     {
         id: 'lilas-suave',
         name: 'Lilás Suave',
-        bg: '#faf5ff',
-        primary: '#c026d3',
-        accent: '#e879f9',
+        bg: '#fdf4ff',
+        primary: '#d946ef',
+        accent: '#f0abfc',
         timerColor: '#86198f',
-        cardBg: '#fdf4ff',
+        cardBg: '#ffffff',
         isDefault: true
     },
     {
         id: 'amethyst',
         name: 'Amethyst',
         bg: '#f3e8ff',
-        primary: '#6d28d9',
+        primary: '#7c3aed',
         accent: '#a78bfa',
-        timerColor: '#4c1d95',
-        cardBg: '#ede9fe',
+        timerColor: '#5b21b6',
+        cardBg: '#ffffff',
         isDefault: true
     }
 ];
@@ -118,10 +118,20 @@ class ThemeManager {
         root.style.setProperty('--timer-color', theme.timerColor);
         root.style.setProperty('--card-bg', theme.cardBg);
 
-        root.style.setProperty('--border', this.lighten(theme.cardBg, -10));
-        root.style.setProperty('--shadow', theme.primary + '33');
-        root.style.setProperty('--text', this.getContrastColor(theme.bg));
-        root.style.setProperty('--text-secondary', this.getContrastColor(theme.cardBg));
+        const borderColor = theme.isDefault
+            ? this.lighten(theme.bg, -15)
+            : this.blend(theme.cardBg, theme.primary, 0.12);
+
+        root.style.setProperty('--border', borderColor);
+        root.style.setProperty('--shadow', theme.primary + '1A');
+        root.style.setProperty('--shadow-strong', theme.primary + '33');
+
+        const textColor = this.getContrastColor(theme.bg);
+        const textSecondary = this.getContrastColor(
+            this.lighten(theme.bg, -8)
+        );
+        root.style.setProperty('--text', textColor);
+        root.style.setProperty('--text-secondary', textSecondary);
 
         this.renderGrid();
     }
@@ -132,7 +142,7 @@ class ThemeManager {
         const g = parseInt(hex.substring(2, 4), 16);
         const b = parseInt(hex.substring(4, 6), 16);
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        return luminance > 0.5 ? '#1f2937' : '#f9fafb';
+        return luminance > 0.5 ? '#1e1b4b' : '#f9fafb';
     }
 
     lighten(hex, percent) {
@@ -144,15 +154,24 @@ class ThemeManager {
         return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
     }
 
+    blend(color1, color2, ratio) {
+        const c1 = parseInt(color1.replace('#', ''), 16);
+        const c2 = parseInt(color2.replace('#', ''), 16);
+        const r = Math.round(((c1 >> 16) * (1 - ratio)) + ((c2 >> 16) * ratio));
+        const g = Math.round((((c1 >> 8) & 0xFF) * (1 - ratio)) + (((c2 >> 8) & 0xFF) * ratio));
+        const b = Math.round(((c1 & 0xFF) * (1 - ratio)) + ((c2 & 0xFF) * ratio));
+        return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+    }
+
     addTheme(themeData) {
         const newTheme = {
             id: 'theme-' + Date.now(),
             name: themeData.name || 'Sem Nome',
-            bg: themeData.bg || '#ffffff',
-            primary: themeData.primary || '#7c3aed',
-            accent: themeData.accent || '#a78bfa',
-            timerColor: themeData.timerColor || '#4c1d95',
-            cardBg: themeData.cardBg || '#f5f3ff',
+            bg: themeData.bg || '#faf5ff',
+            primary: themeData.primary || '#8b5cf6',
+            accent: themeData.accent || '#c4b5fd',
+            timerColor: themeData.timerColor || '#6d28d9',
+            cardBg: themeData.cardBg || '#ffffff',
             isDefault: false
         };
         this.themes.push(newTheme);

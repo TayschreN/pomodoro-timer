@@ -129,10 +129,10 @@ function playNotification() {
             gain.connect(audioCtx.destination);
             osc.frequency.value = freq;
             osc.type = 'sine';
-            gain.gain.setValueAtTime(0.4, now + i * 0.12);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+            gain.gain.setValueAtTime(0.35, now + i * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5);
             osc.start(now + i * 0.12);
-            osc.stop(now + i * 0.12 + 0.4);
+            osc.stop(now + i * 0.12 + 0.5);
         });
     } catch {
     }
