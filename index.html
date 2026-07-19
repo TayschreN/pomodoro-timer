@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="session-tabs" id="sessionTabs">
+                <button class="tab active" data-session="focus">Foco</button>
+                <button class="tab" data-session="shortBreak">Pausa Curta</button>
+                <button class="tab" data-session="longBreak">Pausa Longa</button>
+            </div>
+            <button class="icon-btn" id="settingsBtn" title="Configurações">⚙</button>
+        </header>
+
+        <main class="main-content">
+            <div class="timer-container">
+                <div class="progress-ring-container">
+                    <svg class="progress-ring" viewBox="0 0 300 300">
+                        <circle
+                            class="progress-ring-bg"
+                            cx="150" cy="150" r="130"
+                            fill="none"
+                            stroke-width="12"
+                        />
+                        <circle
+                            class="progress-ring-fill"
+                            cx="150" cy="150" r="130"
+                            fill="none"
+                            stroke-width="12"
+                            stroke-linecap="round"
+                            stroke-dasharray="816.81"
+                            stroke-dashoffset="0"
+                        />
+                    </svg>
+                    <div class="timer-display">
+                        <span class="timer-time" id="timerDisplay">25:00</span>
+                        <span class="timer-label" id="sessionLabel">Foco</span>
+                        <div class="timer-controls">
+                            <button class="btn primary-btn" id="startBtn">Iniciar</button>
+                            <button class="icon-btn" id="resetBtn" title="Reiniciar">↻</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="theme-panel" id="themePanel">
+            <div class="theme-panel-header">
+                <h3>Temas</h3>
+                <button class="icon-btn" id="closeThemePanel">✕</button>
+            </div>
+            <div class="theme-grid" id="themeGrid"></div>
+            <button class="btn secondary-btn" id="newThemeBtn">+ Novo Tema</button>
+        </aside>
+
+        <button class="fab" id="fabThemeBtn" title="Temas">🎨</button>
+    </div>
+
+    <div class="modal-overlay hidden" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Configurações</h2>
+                <button class="icon-btn modal-close" data-modal="settingsModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="focusTime">Foco (minutos)</label>
+                    <input type="number" id="focusTime" min="1" max="120" value="25">
+                </div>
+                <div class="form-group">
+                    <label for="shortBreakTime">Pausa Curta (minutos)</label>
+                    <input type="number" id="shortBreakTime" min="1" max="60" value="5">
+                </div>
+                <div class="form-group">
+                    <label for="longBreakTime">Pausa Longa (minutos)</label>
+                    <input type="number" id="longBreakTime" min="1" max="120" value="15">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-btn" data-modal="settingsModal">Cancelar</button>
+                <button class="btn primary-btn" id="saveSettings">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="themeEditor">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="themeEditorTitle">Novo Tema</h2>
+                <button class="icon-btn modal-close" data-modal="themeEditor">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="themeName">Nome do Tema</label>
+                    <input type="text" id="themeName" placeholder="Ex: Meu Tema">
+                </div>
+                <div class="color-picker-group">
+                    <div class="color-field">
+                        <label for="themeBg">Fundo</label>
+                        <input type="color" id="themeBg" value="#ffffff">
+                    </div>
+                    <div class="color-field">
+                        <label for="themePrimary">Primária</label>
+                        <input type="color" id="themePrimary" value="#7c3aed">
+                    </div>
+                    <div class="color-field">
+                        <label for="themeAccent">Destaque</label>
+                        <input type="color" id="themeAccent" value="#a78bfa">
+                    </div>
+                    <div class="color-field">
+                        <label for="themeTimerColor">Timer</label>
+                        <input type="color" id="themeTimerColor" value="#4c1d95">
+                    </div>
+                    <div class="color-field">
+                        <label for="themeCardBg">Cartões</label>
+                        <input type="color" id="themeCardBg" value="#f5f3ff">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-btn" data-modal="themeEditor">Cancelar</button>
+                <button class="btn primary-btn" id="saveTheme">Salvar Tema</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification hidden" id="notification">
+        <span id="notificationMsg">Tempo esgotado!</span>
+    </div>
+
+    <script src="js/themes.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/timer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
