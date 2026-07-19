@@ -321,9 +321,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     timer.onSkip = (session) => {
         playNotification();
-        showNotification('⏭ Pomodoro pulado', false);
+        showNotification('⏭ Pomodoro concluído!', false);
         startBtn.textContent = 'Iniciar';
         startBtn.classList.remove('running');
+
+        if (session === 'focus') {
+            sessionPomodorosCount++;
+            updateSessionPomodoros();
+
+            const subj = subjectManager.getActive();
+            const subjName = subj ? subj.name : 'Sem Matéria';
+            const duration = settingsManager.getAll().focus;
+            subjectManager.logSession(
+                subj ? subj.id : null,
+                subjName,
+                'focus',
+                duration
+            );
+
+            const result = subjectManager.incrementActive();
+            if (result) {
+                updateSubjectDisplay();
+                updateAchievements();
+                if (result.reached) {
+                    setTimeout(() => {
+                        showNotification(`🎉 Parabéns! Você completou a meta de ${result.name}!`, true);
+                    }, 1000);
+                }
+            } else {
+                updateAchievements();
+            }
+        }
     };
 
     timer.onStateChange = (state) => {
